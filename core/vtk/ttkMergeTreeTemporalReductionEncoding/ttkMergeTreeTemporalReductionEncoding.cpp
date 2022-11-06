@@ -211,6 +211,9 @@ int ttkMergeTreeTemporalReductionEncoding::runCompute(
   // --- Call base
   // ------------------------------------------------------------------------------------
   printMsg("Call base", debug::Priority::VERBOSE);
+  epsilonTree2_ = epsilonTree1_;
+  epsilon2Tree2_ = epsilon2Tree1_;
+  epsilon3Tree2_ = epsilon3Tree1_;
 
   std::vector<MergeTree<dataType>> allMT_T;
 

@@ -134,9 +134,9 @@ namespace ttk {
       // --- Preprocessing
       treesNodeCorr_ = std::vector<std::vector<int>>(mTrees.size());
       for(unsigned int i = 0; i < mTrees.size(); ++i) {
-        preprocessingPipeline<dataType>(
-          mTrees[i], epsilonTree2_, epsilon2Tree2_, epsilon3Tree2_,
-          branchDecomposition_, useMinMaxPair_, cleanTree_, treesNodeCorr_[i]);
+        preprocessingPipeline<dataType>(mTrees[i], 0, 100, 100,
+                                        branchDecomposition_, useMinMaxPair_,
+                                        cleanTree_, treesNodeCorr_[i]);
       }
       printTreesStats<dataType>(mTrees);
 

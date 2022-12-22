@@ -626,7 +626,7 @@ namespace ttk {
       mergeTreeBary.setAssignmentSolver(assignmentSolverID_);
       mergeTreeBary.setIsCalled(true);
       mergeTreeBary.setThreadNumber(this->threadNumber_);
-      mergeTreeBary.setDistanceSquared(true); // squared root
+      mergeTreeBary.setDistanceSquaredRoot(true); // squared root
       mergeTreeBary.setProgressiveBarycenter(progressiveBarycenter_);
       mergeTreeBary.setDeterministic(deterministic_);
       mergeTreeBary.setTol(tol_);
@@ -765,7 +765,8 @@ namespace ttk {
                  std::vector<int> &clusteringAssignment,
                  std::vector<ftm::MergeTree<dataType>> &trees2,
                  matchingVectorType &outputMatching2,
-                 std::vector<ftm::MergeTree<dataType>> &centroids) {
+                 std::vector<ftm::MergeTree<dataType>> &centroids,
+                 std::vector<ftm::MergeTree<dataType>> &centroids2) {
       // --- Preprocessing
       // std::vector<ftm::FTMTree_MT*> oldTrees, oldTrees2;
       treesNodeCorr_.resize(trees.size());
@@ -784,7 +785,6 @@ namespace ttk {
       std::vector<std::vector<ftm::MergeTree<dataType>>> allCentroids;
       initCentroids<dataType>(treesT, treesT2, allCentroids);
       centroids = allCentroids[0];
-      std::vector<ftm::MergeTree<dataType>> centroids2;
       if(trees2.size() != 0)
         centroids2 = allCentroids[1];
       /*for(unsigned int i = 0; i < centroids.size(); ++i){
@@ -820,7 +820,8 @@ namespace ttk {
                  std::vector<int> &clusteringAssignment,
                  std::vector<ftm::MergeTree<dataType>> &trees2,
                  matchingVectorType &outputMatching2,
-                 std::vector<ftm::MergeTree<dataType>> &centroids) {
+                 std::vector<ftm::MergeTree<dataType>> &centroids,
+                 std::vector<ftm::MergeTree<dataType>> &centroids2) {
       if(trees2.size() != 0)
         printMsg("Use join and split trees");
 
@@ -829,7 +830,7 @@ namespace ttk {
         alphas.push_back(1.0 / trees.size());
 
       execute<dataType>(trees, outputMatching, alphas, clusteringAssignment,
-                        trees2, outputMatching2, centroids);
+                        trees2, outputMatching2, centroids, centroids2);
     }
 
     template <class dataType>
@@ -837,10 +838,10 @@ namespace ttk {
                  matchingVectorType &outputMatching,
                  std::vector<int> &clusteringAssignment,
                  std::vector<ftm::MergeTree<dataType>> &centroids) {
-      std::vector<ftm::MergeTree<dataType>> trees2;
+      std::vector<ftm::MergeTree<dataType>> trees2, centroids2;
       matchingVectorType outputMatching2 = matchingVectorType();
       execute<dataType>(trees, outputMatching, clusteringAssignment, trees2,
-                        outputMatching2, centroids);
+                        outputMatching2, centroids, centroids2);
     }
 
     // ------------------------------------------------------------------------

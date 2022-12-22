@@ -29,8 +29,11 @@
 ///   - <a
 ///   href="https://topology-tool-kit.github.io/examples/BuiltInExample1/">
 ///   BuiltInExample1</a> \n
+///   - <a
+///   href="https://topology-tool-kit.github.io/examples/compactTriangulation/">
+///   Compact triangulation example</a>\n
 ///   - <a href="https://topology-tool-kit.github.io/examples/dragon/">Dragon
-///   example</a>
+///   example</a>\n
 ///   - <a
 ///   href="https://topology-tool-kit.github.io/examples/interactionSites/">
 ///   Interaction sites</a> \n
@@ -241,21 +244,14 @@ int ttk::ScalarFieldCriticalPoints::executeLegacy(
 
   if(triangulation) {
 
-#if TTK_ENABLE_MPI
-    const auto rankArray{triangulation->getVertRankArray()};
-    if(ttk::isRunningWithMPI() && rankArray == nullptr) {
-      this->printErr("Missing vertex rank array");
-      return -6;
-    }
-#endif // TTK_ENABLE_MPI
-
 #ifdef TTK_ENABLE_OPENMP
 #pragma omp parallel for schedule(dynamic, chunkSize) num_threads(threadNumber_)
 #endif
     for(SimplexId i = 0; i < (SimplexId)vertexNumber_; i++) {
 #if TTK_ENABLE_MPI
       if(!isRunningWithMPI()
-         || (isRunningWithMPI() && (rankArray[i] == ttk::MPIrank_))) {
+         || (isRunningWithMPI()
+             && (triangulation->getVertexRank(i) == ttk::MPIrank_))) {
 #endif
         vertexTypes[i] = getCriticalType(i, offsets, triangulation);
 #if TTK_ENABLE_MPI

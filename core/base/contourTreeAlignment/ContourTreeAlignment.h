@@ -518,9 +518,15 @@ int ttk::ContourTreeAlignment::execute(
   for(size_t i = 0; i < nTrees; i++) {
     permutation.push_back(i);
   }
-  std::srand(seed);
-  if(alignmenttreeType != ttk::cta::lastMatchedValue)
-    std::random_shuffle(permutation.begin(), permutation.end());
+
+  // initialize random engine using user-provided seed
+  std::mt19937 random_engine{};
+  random_engine.seed(seed);
+
+  if(alignmenttreeType != ttk::cta::lastMatchedValue) {
+    // shuffle using the random engine
+    std::shuffle(permutation.begin(), permutation.end(), random_engine);
+  }
 
   this->printMsg(
     "Shuffling input trees. Used seed: " + std::to_string(seed), 1);
@@ -549,11 +555,11 @@ int ttk::ContourTreeAlignment::execute(
 
   std::vector<std::shared_ptr<ContourTree>> contourtreesToAlign;
   for(size_t i = 0; i < nTrees; i++) {
-    std::shared_ptr<ContourTree> ct(new ContourTree(
+    auto ct = std::make_shared<ContourTree>(
       scalars[permutation[i]], regionSizes[permutation[i]],
       segmentationIds[permutation[i]], topologies[permutation[i]],
       nVertices[permutation[i]], nEdges[permutation[i]],
-      segRegions.empty() ? std::vector<std::vector<int>>() : segRegions[i]));
+      segRegions.empty() ? std::vector<std::vector<int>>() : segRegions[i]);
     if(ct->isBinary()) {
       contourtreesToAlign.push_back(ct);
     } else {

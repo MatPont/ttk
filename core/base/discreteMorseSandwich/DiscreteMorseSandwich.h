@@ -76,11 +76,36 @@ namespace ttk {
       return this->dg_.buildGradient(triangulation);
     }
 
+    /**
+     * @brief Ugly hack to avoid a call to buildGradient()
+     *
+     * An externally computed gradient can be retrofitted into this
+     * class using move semantics with setGradient().
+     * The internal gradient can be fetched back with getGradient()
+     * once the persistence pairs are computed .
+     * c.f. ttk::MorseSmaleComplex::returnSaddleConnectors
+     *
+     * @param[in] dg External gradient instance
+     */
+    inline void setGradient(ttk::dcg::DiscreteGradient &&dg) {
+      this->dg_ = std::move(dg);
+      // reset gradient pointer to local storage
+      this->dg_.setLocalGradient();
+    }
+    inline ttk::dcg::DiscreteGradient &&getGradient() {
+      return std::move(this->dg_);
+    }
+
     template <typename triangulationType>
     inline SimplexId
       getCellGreaterVertex(const dcg::Cell &c,
                            const triangulationType &triangulation) {
       return this->dg_.getCellGreaterVertex(c, triangulation);
+    }
+
+    inline const std::vector<std::vector<SimplexId>> &
+      get2SaddlesChildren() const {
+      return this->s2Children_;
     }
 
     /**
@@ -93,6 +118,7 @@ namespace ttk {
      * @param[in] offsets Order field
      * @param[in] triangulation Preconditionned triangulation
      * @param[in] ignoreBoundary Ignore the boundary component
+     * @param[in] compute2SaddlesChildren Extract links between 2-saddles
      *
      * @return 0 when success
      */
@@ -100,7 +126,8 @@ namespace ttk {
     int computePersistencePairs(std::vector<PersistencePair> &pairs,
                                 const SimplexId *const offsets,
                                 const triangulationType &triangulation,
-                                const bool ignoreBoundary);
+                                const bool ignoreBoundary,
+                                const bool compute2SaddlesChildren = false);
 
     /**
      * @brief Type for exporting persistent generators
@@ -449,10 +476,12 @@ namespace ttk {
     mutable std::array<std::vector<bool>, 4> pairedCritCells_{};
     mutable std::vector<bool> onBoundary_{};
     mutable std::array<std::vector<SimplexId>, 4> critCellsOrder_{};
+    mutable std::vector<std::vector<SimplexId>> s2Children_{};
 
     bool ComputeMinSad{true};
     bool ComputeSadSad{true};
     bool ComputeSadMax{true};
+    bool Compute2SaddlesChildren{false};
   };
 } // namespace ttk
 
@@ -801,6 +830,9 @@ SimplexId ttk::DiscreteMorseSandwich::eliminateBoundariesSandwich(
             addBoundary(e);
           }
           s2Locks[s2Mapping[pTau]].unlock();
+          if(this->Compute2SaddlesChildren) {
+            this->s2Children_[s2Mapping[s2]].emplace_back(s2Mapping[pTau]);
+          }
 
         } else if(s2Mapping[pTau] > s2Mapping[s2]) {
 
@@ -870,6 +902,10 @@ void ttk::DiscreteMorseSandwich::getSaddleSaddlePairs(
   }
 
   Timer tmpar{};
+
+  if(this->Compute2SaddlesChildren) {
+    this->s2Children_.resize(saddles2.size());
+  }
 
   // sort every triangulation edges by filtration order
   const auto &edgesFiltrOrder{crit1SaddlesOrder};
@@ -973,37 +1009,8 @@ void ttk::DiscreteMorseSandwich::extractCriticalCells(
   const bool sortEdges) const {
 
   Timer tm{};
-  const auto dim = this->dg_.getDimensionality();
 
-  for(int i = 0; i < dim + 1; ++i) {
-
-    // map: store critical cell per dimension per thread
-    std::vector<std::vector<SimplexId>> critCellsPerThread(this->threadNumber_);
-
-    const SimplexId numberOfCells
-      = this->dg_.getNumberOfCells(i, triangulation);
-#ifdef TTK_ENABLE_OPENMP
-#pragma omp parallel for num_threads(this->threadNumber_)
-#endif // TTK_ENABLE_OPENMP
-    for(SimplexId j = 0; j < numberOfCells; ++j) {
-#ifdef TTK_ENABLE_OPENMP
-      const auto tid = omp_get_thread_num();
-#else
-      const auto tid = 0;
-#endif // TTK_ENABLE_OPENMP
-      if(this->dg_.isCellCritical(i, j)) {
-        critCellsPerThread[tid].emplace_back(j);
-      }
-    }
-
-    // reduce: aggregate critical cells per thread
-    criticalCellsByDim[i] = std::move(critCellsPerThread[0]);
-    for(size_t j = 1; j < critCellsPerThread.size(); ++j) {
-      const auto &vec{critCellsPerThread[j]};
-      criticalCellsByDim[i].insert(
-        criticalCellsByDim[i].end(), vec.begin(), vec.end());
-    }
-  }
+  this->dg_.getCriticalPoints(criticalCellsByDim, triangulation);
 
   this->printMsg("Extracted critical cells", 1.0, tm.getElapsedTime(),
                  this->threadNumber_, debug::LineMode::NEW,
@@ -1110,7 +1117,8 @@ int ttk::DiscreteMorseSandwich::computePersistencePairs(
   std::vector<PersistencePair> &pairs,
   const SimplexId *const offsets,
   const triangulationType &triangulation,
-  const bool ignoreBoundary) {
+  const bool ignoreBoundary,
+  const bool compute2SaddlesChildren) {
 
   // allocate memory
   this->alloc(triangulation);
@@ -1118,6 +1126,7 @@ int ttk::DiscreteMorseSandwich::computePersistencePairs(
   Timer tm{};
   pairs.clear();
   const auto dim = this->dg_.getDimensionality();
+  this->Compute2SaddlesChildren = compute2SaddlesChildren;
 
   // get every critical cell sorted them by dimension
   std::array<std::vector<SimplexId>, 4> criticalCellsByDim{};

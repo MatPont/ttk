@@ -62,7 +62,7 @@ namespace ttk {
       mergeTreeDistance.setAssignmentSolver(assignmentSolverID_);
       mergeTreeDistance.setIsCalled(isCalled);
       mergeTreeDistance.setThreadNumber(this->threadNumber_);
-      mergeTreeDistance.setDistanceSquared(true); // squared root
+      mergeTreeDistance.setDistanceSquaredRoot(true); // squared root
       mergeTreeDistance.setNodePerTask(nodePerTask_);
       if(useDoubleInput) {
         double weight = mixDistancesMinMaxPairWeight(isFirstInput);
@@ -746,12 +746,13 @@ namespace ttk {
       std::vector<std::tuple<ftm::idNode, ftm::idNode, double>> &matchings,
       std::vector<ftm::idNode> &matchingVector) {
       matchingVector.clear();
-      matchingVector.resize(barycenter.tree.getNumberOfNodes(), -1);
+      matchingVector.resize(barycenter.tree.getNumberOfNodes(),
+                            std::numeric_limits<ftm::idNode>::max());
       for(unsigned int j = 0; j < matchings.size(); ++j) {
         auto match0 = std::get<0>(matchings[j]);
         auto match1 = std::get<1>(matchings[j]);
-        if(match0 < barycenter.tree.getNumberOfNodes() and match0 >= 0
-           and match1 < tree.tree.getNumberOfNodes() and match1 >= 0)
+        if(match0 < barycenter.tree.getNumberOfNodes()
+           and match1 < tree.tree.getNumberOfNodes())
           matchingVector[match0] = match1;
       }
     }
@@ -764,12 +765,13 @@ namespace ttk {
       std::vector<std::tuple<ftm::idNode, ftm::idNode, double>> &matchings,
       std::vector<ftm::idNode> &matchingVector) {
       matchingVector.clear();
-      matchingVector.resize(tree.tree.getNumberOfNodes(), -1);
+      matchingVector.resize(
+        tree.tree.getNumberOfNodes(), std::numeric_limits<ftm::idNode>::max());
       for(unsigned int j = 0; j < matchings.size(); ++j) {
         auto match0 = std::get<0>(matchings[j]);
         auto match1 = std::get<1>(matchings[j]);
-        if(match0 < barycenter.tree.getNumberOfNodes() and match0 >= 0
-           and match1 < tree.tree.getNumberOfNodes() and match1 >= 0)
+        if(match0 < barycenter.tree.getNumberOfNodes()
+           and match1 < tree.tree.getNumberOfNodes())
           matchingVector[match1] = match0;
       }
     }
@@ -784,8 +786,10 @@ namespace ttk {
         &matchings,
       std::vector<std::vector<ftm::idNode>> &matchingMatrix) {
       matchingMatrix.clear();
-      matchingMatrix.resize(barycenter.tree.getNumberOfNodes(),
-                            std::vector<ftm::idNode>(trees.size(), -1));
+      matchingMatrix.resize(
+        barycenter.tree.getNumberOfNodes(),
+        std::vector<ftm::idNode>(
+          trees.size(), std::numeric_limits<ftm::idNode>::max()));
       for(unsigned int i = 0; i < trees.size(); ++i) {
         std::vector<ftm::idNode> matchingVector;
         getMatchingVector<dataType>(

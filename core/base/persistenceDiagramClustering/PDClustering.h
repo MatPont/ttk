@@ -42,7 +42,7 @@ namespace ttk {
       return {this->cost_min_, this->cost_sad_, this->cost_max_};
     }
 
-    double getMostPersistent(int type = -1);
+    double getMostPersistent(int type = -1, int diagram_id = -1);
     std::vector<std::vector<int>> get_centroids_sizes();
     double getLessPersistent(int type = -1);
     std::vector<std::vector<double>> getMinDiagonalPrices();
@@ -204,6 +204,13 @@ namespace ttk {
       deltaLim_ = deltaLim;
     }
 
+    inline void setExpectedNoiseA(const double expectedNoiseA) {
+      expectedNoiseA_ = expectedNoiseA;
+    }
+    inline void setExpectedNoiseB(const double expectedNoiseB) {
+      expectedNoiseB_ = expectedNoiseB;
+    }
+
     inline void printClustering() {
       std::string msg{};
       for(int c = 0; c < k_; ++c) {
@@ -261,6 +268,7 @@ namespace ttk {
     // pair sad-max) lambda = 0 : saddle (bad stability) lambda = 1/2 : middle
     // of the 2 critical points of the pair
     double lambda_;
+    double expectedNoiseA_{0}, expectedNoiseB_{0};
 
     int k_;
     int numberOfInputs_;

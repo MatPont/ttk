@@ -115,6 +115,17 @@ std::vector<int> ttk::PDClustering::execute(
         min_off_diag_price[c].emplace_back(0);
       }
     }
+    double secondNoisePers = 0;
+    if(numberOfInputs_ == 2
+       and (expectedNoiseA_ != 0 or expectedNoiseB_ != 0)) {
+      double noisePersA = expectedNoiseA_ * getMostPersistent(-1, 0),
+             noisePersB = expectedNoiseB_ * getMostPersistent(-1, 1);
+      std::fill(min_persistence.begin(), min_persistence.end(),
+                std::max(noisePersA, noisePersB));
+      secondNoisePers = std::min(noisePersA, noisePersB);
+      for(unsigned int i = 0; i < 3; ++i)
+        min_points_to_add[i] = 0;
+    }
     min_persistence = enrichCurrentBidderDiagrams(
       max_persistence, min_persistence, min_diag_price, min_off_diag_price,
       min_points_to_add, false, true);
@@ -200,6 +211,10 @@ std::vector<int> ttk::PDClustering::execute(
           }
 
           if(do_min_ || do_sad_ || do_max_) {
+            if(n_iterations_ == 2 and numberOfInputs_ == 2
+               and (expectedNoiseA_ != 0 or expectedNoiseB_ != 0)) {
+              std::fill(rho.begin(), rho.end(), secondNoisePers);
+            }
             min_persistence = enrichCurrentBidderDiagrams(
               min_persistence, rho, min_diag_price, min_off_diag_price,
               min_points_to_add, true, false);
@@ -637,11 +652,13 @@ std::vector<std::vector<int>> ttk::PDClustering::get_centroids_sizes() {
   return centroids_sizes_;
 }
 
-double ttk::PDClustering::getMostPersistent(int type) {
+double ttk::PDClustering::getMostPersistent(int type, int diagram_id) {
   double max_persistence = 0;
 
   if(do_min_ && (type == -1 || type == 0)) {
     for(size_t i = 0; i < bidder_diagrams_min_.size(); ++i) {
+      if(diagram_id != -1 and diagram_id != (int)i)
+        continue;
       for(size_t j = 0; j < bidder_diagrams_min_[i].size(); ++j) {
         Bidder b = bidder_diagrams_min_[i].at(j);
         double persistence = b.getPersistence();
@@ -654,6 +671,8 @@ double ttk::PDClustering::getMostPersistent(int type) {
 
   if(do_sad_ && (type == -1 || type == 1)) {
     for(size_t i = 0; i < bidder_diagrams_saddle_.size(); ++i) {
+      if(diagram_id != -1 and diagram_id != (int)i)
+        continue;
       for(size_t j = 0; j < bidder_diagrams_saddle_[i].size(); ++j) {
         Bidder b = bidder_diagrams_saddle_[i].at(j);
         double persistence = b.getPersistence();
@@ -666,6 +685,8 @@ double ttk::PDClustering::getMostPersistent(int type) {
 
   if(do_max_ && (type == -1 || type == 2)) {
     for(size_t i = 0; i < bidder_diagrams_max_.size(); ++i) {
+      if(diagram_id != -1 and diagram_id != (int)i)
+        continue;
       for(size_t j = 0; j < bidder_diagrams_max_[i].size(); ++j) {
         Bidder b = bidder_diagrams_max_[i].at(j);
         double persistence = b.getPersistence();

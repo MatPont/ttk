@@ -380,6 +380,40 @@ between matched critical points.
           Set to 0.5 to choose the geometrical middle of the pair points (bad stability)
         </Documentation>
       </DoubleVectorProperty>
+      
+      <DoubleVectorProperty
+        name="ExpectedNoiseA"
+        label="Expected Noise Level A"
+        command="SetExpectedNoiseA"
+        number_of_elements="1"
+        default_values="0">
+        <Hints>
+          <PropertyWidgetDecorator type="GenericDecorator"
+                                    mode="visibility"
+                                    property="Method"
+                                    value="0" />
+        </Hints>
+        <Documentation>
+          Expected noise level in the first diagram.
+        </Documentation>
+      </DoubleVectorProperty>
+      
+      <DoubleVectorProperty
+        name="ExpectedNoiseB"
+        label="Expected Noise Level B"
+        command="SetExpectedNoiseB"
+        number_of_elements="1"
+        default_values="0">
+        <Hints>
+          <PropertyWidgetDecorator type="GenericDecorator"
+                                    mode="visibility"
+                                    property="Method"
+                                    value="0" />
+        </Hints>
+        <Documentation>
+          Expected noise level in the second diagram.
+        </Documentation>
+      </DoubleVectorProperty>
 
       ${DEBUG_WIDGETS}
 

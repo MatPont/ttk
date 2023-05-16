@@ -79,6 +79,8 @@ namespace ttk {
     bool UseAccelerated{false};
     bool UseKmeansppInit{false};
 
+    double ExpectedNoiseA{0}, ExpectedNoiseB{0};
+
     int points_added_;
     int points_deleted_;
   };

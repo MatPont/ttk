@@ -136,10 +136,10 @@ public:
 
   ttkSetEnumMacro(Method, METHOD);
   vtkGetEnumMacro(Method, METHOD);
-  
+
   vtkSetMacro(ExpectedNoiseA, double);
   vtkGetMacro(ExpectedNoiseA, double);
-  
+
   vtkSetMacro(ExpectedNoiseB, double);
   vtkGetMacro(ExpectedNoiseB, double);
 

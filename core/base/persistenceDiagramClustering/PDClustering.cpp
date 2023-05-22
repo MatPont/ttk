@@ -211,9 +211,12 @@ std::vector<int> ttk::PDClustering::execute(
           }
 
           if(do_min_ || do_sad_ || do_max_) {
-            if(n_iterations_ == 2 and numberOfInputs_ == 2
+            if(numberOfInputs_ == 2
                and (expectedNoiseA_ != 0 or expectedNoiseB_ != 0)) {
-              std::fill(rho.begin(), rho.end(), secondNoisePers);
+              if(n_iterations_ == 2)
+                std::fill(rho.begin(), rho.end(), secondNoisePers);
+              else
+                std::fill(rho.begin(), rho.end(), 0);
             }
             min_persistence = enrichCurrentBidderDiagrams(
               min_persistence, rho, min_diag_price, min_off_diag_price,
